@@ -2,32 +2,53 @@ pipeline {
     agent any
 
     parameters {
-        choice(name: 'ACTION', choices: ['init', 'apply'], description: 'Choose Terraform action')
+        choice(name: 'ACTION', choices: ['init', 'deploy'], description: 'Choose Terraform action')
     }
 
+    // Stage 1: Checkout Code (CI)
     stages {
-        stage('Checkout') {
+        stage('Checkout GitHub Repo') {
             steps {
-                // Checkout the current repo automatically; no need to hardcode URL
+                git branch: 'main', url: 'https://github.com/efolayemi/jenkins_s3_bucket_public.git'
+                // Checkout the current repo automatically; no hardcoding
                 checkout scm
             }
         }
 
-        stage('Terraform Init & Apply') {
+        // Stage 2: Terraform Init (CI)
+        stage('Terraform Init') {
             steps {
                 withAWS(credentials: 'fola-aws-credentials', region: 'eu-west-2') {
                     sh 'terraform init'
+                }
+            }
+        }
 
-                    script {
-                        if (params.ACTION == 'apply') {
-                            sh 'terraform apply -auto-approve'
-                        }
+        // Stage 3: Terraform Plan (CI)
+        stage('Terraform Plan') {
+            steps {
+                script {
+                    if (params.ACTION == 'plan') {
+                        sh 'terraform plan -out=tfplan'
                     }
                 }
             }
         }
-    }
 
+        // Stage 4: Terraform Deploy (CD)
+        Stage('Terraform Deploy') {
+            steps {
+                script {
+                    if (params.ACTION == 'deploy') {
+                        withAWS(credentials: 'fola-aws-credentials', region: 'eu-west-2') {
+                            sh 'terraform-apply auto-approve'
+                    }
+                }   
+            }       
+        }
+    }
+}
+        
     post {
         always {
             echo 'Pipeline finished.'
