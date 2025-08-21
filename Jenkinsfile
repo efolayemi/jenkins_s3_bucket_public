@@ -5,10 +5,6 @@ pipeline {
         choice(name: 'ACTION', choices: ['init', 'plan', 'deploy'], description: 'Choose Terraform action')
     }
 
-    environment {
-        PLAN_CREATED = false
-    }
-
     stages {
         stage('Checkout GitHub Repo') {
             steps {
@@ -30,23 +26,20 @@ pipeline {
         }
 
         stage('Terraform Plan') {
+            when {
+                expression { params.ACTION == 'plan' || params.ACTION == 'deploy' }
+            }
             steps {
-                script {
-                    if (params.ACTION == 'plan' || params.ACTION == 'deploy') {
-                        sh 'terraform plan -out=tfplan'
-                        env.PLAN_CREATED = true
-                    }
-                }
+                sh 'terraform plan -out=tfplan'
             }
         }
 
         stage('Terraform Deploy') {
+            when {
+                expression { params.ACTION == 'deploy' }
+            }
             steps {
-                script {
-                    if (params.ACTION == 'deploy' || env.PLAN_CREATED.toBoolean()) {
-                        sh 'terraform apply -auto-approve tfplan || terraform apply -auto-approve'
-                    }
-                }
+                sh 'terraform apply -auto-approve tfplan || terraform apply -auto-approve'
             }
         }
     }
