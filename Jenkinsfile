@@ -18,7 +18,7 @@ pipeline {
         // Stage 2: Terraform Init (CI)
         stage('Terraform Init') {
             steps {
-                withAWS(credentials: 'fola-aws-credentials', region: 'eu-west-2') {
+                withAWS(credentials: 'my-aws-credentials', region: 'eu-west-2') {
                     sh 'terraform init'
                 }
             }
@@ -40,7 +40,7 @@ pipeline {
             steps {
                 script {
                     if (params.ACTION == 'deploy') {
-                        withAWS(credentials: 'fola-aws-credentials', region: 'eu-west-2') {
+                        withAWS(credentials: 'my-aws-credentials', region: 'eu-west-2') {
                             sh 'terraform-apply auto-approve'
                     }
                 }   
