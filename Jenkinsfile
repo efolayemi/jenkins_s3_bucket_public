@@ -35,19 +35,19 @@ pipeline {
             }
         }
 
-        // Stage 4: Terraform Deploy (CD)
         stage('Terraform Deploy') {
             steps {
                 script {
                     if (params.ACTION == 'deploy') {
                         withAWS(credentials: 'my-aws-credentials', region: 'eu-west-2') {
-                            sh 'terraform-deploy auto-approve'
+                            // Apply the Terraform plan if it exists, or just deploy
+                            sh 'terraform apply -auto-approve tfplan || terraform apply -auto-approve'
+                        }
                     }
-                }   
-            }       
+                }
+            }
         }
     }
-}
         
     post {
         always {
