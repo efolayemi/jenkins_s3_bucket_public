@@ -36,7 +36,7 @@ pipeline {
         }
 
         // Stage 4: Terraform Deploy (CD)
-        Stage('Terraform Deploy') {
+        stage('Terraform Deploy') {
             steps {
                 script {
                     if (params.ACTION == 'deploy') {
