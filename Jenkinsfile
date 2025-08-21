@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     parameters {
-        choice(name: 'ACTION', choices: ['init', 'deploy'], description: 'Choose Terraform action')
+        choice(name: 'ACTION', choices: ['init', 'plan', 'deploy'], description: 'Choose Terraform action')
     }
 
     // Stage 1: Checkout Code (CI)
