@@ -5,31 +5,36 @@ pipeline {
         choice(name: 'ACTION', choices: ['init', 'plan', 'deploy'], description: 'Choose Terraform action')
     }
 
-    // Stage 1: Checkout Code (CI)
+    environment {
+        PLAN_CREATED = false
+    }
+
     stages {
         stage('Checkout GitHub Repo') {
             steps {
                 git branch: 'main', url: 'https://github.com/efolayemi/jenkins_s3_bucket_public.git'
-                // Checkout the current repo automatically; no hardcoding
-                checkout scm
             }
         }
 
-        // Stage 2: Terraform Init (CI)
+        stage('Terraform Validation & Linting') {
+            steps {
+                sh 'terraform validate'
+                sh 'terraform fmt -check'
+            }
+        }
+
         stage('Terraform Init') {
             steps {
-                withAWS(credentials: 'my-aws-credentials', region: 'eu-west-2') {
-                    sh 'terraform init'
-                }
+                sh 'terraform init'
             }
         }
 
-        // Stage 3: Terraform Plan (CI)
         stage('Terraform Plan') {
             steps {
                 script {
-                    if (params.ACTION == 'plan') {
+                    if (params.ACTION == 'plan' || params.ACTION == 'deploy') {
                         sh 'terraform plan -out=tfplan'
+                        env.PLAN_CREATED = true
                     }
                 }
             }
@@ -38,17 +43,14 @@ pipeline {
         stage('Terraform Deploy') {
             steps {
                 script {
-                    if (params.ACTION == 'deploy') {
-                        withAWS(credentials: 'my-aws-credentials', region: 'eu-west-2') {
-                            // Apply the Terraform plan if it exists, or just deploy
-                            sh 'terraform apply -auto-approve tfplan || terraform apply -auto-approve'
-                        }
+                    if (params.ACTION == 'deploy' || env.PLAN_CREATED.toBoolean()) {
+                        sh 'terraform apply -auto-approve tfplan || terraform apply -auto-approve'
                     }
                 }
             }
         }
     }
-        
+
     post {
         always {
             echo 'Pipeline finished.'
