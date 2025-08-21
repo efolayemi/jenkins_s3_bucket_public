@@ -41,7 +41,7 @@ pipeline {
                 script {
                     if (params.ACTION == 'deploy') {
                         withAWS(credentials: 'my-aws-credentials', region: 'eu-west-2') {
-                            sh 'terraform-apply auto-approve'
+                            sh 'terraform-deploy auto-approve'
                     }
                 }   
             }       
