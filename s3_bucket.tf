@@ -4,7 +4,7 @@ provider "aws" {
 
 #creation of the bucket
 resource "aws_s3_bucket" "public_bucket" {
-    bucket = "fola_jenkins_s3_bucket"
+    bucket = "fola-jenkins-s3-bucket"
 }
 
 #object owner
